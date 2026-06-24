@@ -1,0 +1,68 @@
+/* frontend/src/index.css */
+
+/* Custom Background for the whole app */
+body {
+  background-color: #f4f7f6;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* Premium Card Hover Effect */
+.product-card {
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  border: 1px solid rgba(0,0,0,0.05);
+  background: white;
+}
+
+.product-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.08), 0 5px 10px rgba(0, 0, 0, 0.04);
+  border-color: rgba(0,0,0,0.08);
+}
+
+/* Gradient Text for the Header */
+.text-gradient {
+  background: linear-gradient(135deg, #2b5876 0%, #4e4376 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Sleek Image Placeholder Gradient */
+.image-placeholder {
+  background: linear-gradient(120deg, #fdfbfb 0%, #ebedee 100%);
+  border-bottom: 1px solid rgba(0,0,0,0.03);
+}
+
+/* Soft Pill Buttons for Categories */
+.category-pill {
+  transition: all 0.2s ease-in-out;
+  border: 2px solid transparent;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.category-pill:hover:not(.active-pill) {
+  background-color: #e9ecef;
+  transform: translateY(-1px);
+}
+
+.active-pill {
+  background: linear-gradient(135deg, #111827 0%, #374151 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(17, 24, 39, 0.2);
+}
+
+/* Smooth Load More Button */
+.btn-load-more {
+  background: white;
+  color: #111827;
+  border: 2px solid #e5e7eb;
+  transition: all 0.2s ease;
+  font-weight: 700;
+}
+
+.btn-load-more:hover:not(:disabled) {
+  border-color: #111827;
+  background: #f9fafb;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
