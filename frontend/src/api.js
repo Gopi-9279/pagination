@@ -1,5 +1,5 @@
 export async function fetchProducts(categoryName, cursorString) {
-  const baseUrl = 'http://localhost:8000/api/products';
+  const baseUrl = '/api/products';
   const url = new URL(baseUrl);
   
   if (categoryName && categoryName !== "All") {

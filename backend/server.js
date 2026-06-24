@@ -60,7 +60,12 @@ app.get('/api/products', async (req, res) => {
   }
 });
 
-mongoose.connect('mongodb://localhost:27017/inventory')
-  .then(() => {
-    app.listen(8000, () => console.log('Backend running on http://localhost:8000'));
-  });
+// Connect to Cloud Database (e.g., MongoDB Atlas)
+const MONGO_URI = process.env.MONGO_URI ;
+
+mongoose.connect(MONGO_URI)
+  .then(() => console.log('Connected to MongoDB'))
+  .catch(err => console.error('MongoDB connection error:', err));
+
+// Export the Express API for Vercel
+export default app;
