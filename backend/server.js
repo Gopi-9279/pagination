@@ -59,9 +59,7 @@ app.get('/api/products', async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
-app.get("*",(req,res)=>{
-  res.send("Sorry Page not exists!");
-})
+
 
 // Connect to Cloud Database (e.g., MongoDB Atlas)
 const MONGO_URI = process.env.MONGO_URI ;
