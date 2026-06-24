@@ -1,6 +1,8 @@
 export async function fetchProducts(categoryName, cursorString) {
   const baseUrl = '/api/products';
-  const url = new URL(baseUrl);
+  
+  // FIX: Added window.location.origin to safely construct the full URL
+  const url = new URL(baseUrl, window.location.origin);
   
   if (categoryName && categoryName !== "All") {
     url.searchParams.append('category', categoryName);
@@ -14,6 +16,7 @@ export async function fetchProducts(categoryName, cursorString) {
   
   const json = await response.json();
   
+  // Map the MongoDB _id to standard id for the frontend
   const mappedData = json.data.map(item => ({
     ...item,
     id: item._id, 
