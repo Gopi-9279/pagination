@@ -1,248 +1,336 @@
-# ⚡ Single-File Inventory Pagination Demo
+# Inventory Catalog - Cursor Pagination Demo
 
-A zero-setup, fully functional demonstration of Cursor-Based Pagination handling 200,000 records entirely within your browser.
+A full-stack product catalog built to demonstrate fast, scalable cursor-based pagination with MongoDB Atlas. The project uses a React + Vite frontend, an Express API, MongoDB/Mongoose for data access, and Vercel for deployment.
 
-This playground simulates a high-performance MERN stack backend without requiring Node.js, MongoDB, Express, or any build tools. It is designed for understanding pagination concepts, testing UI interactions, and visualizing how cursor-based pagination works in production systems.
+The app displays an inventory grid, supports category filtering, and loads more products using a cursor instead of offset/skip pagination. This keeps pagination efficient even with a large collection such as 200,000 products.
 
-## ✨ Features
+## Features
 
-- 🚀 Zero Installation — Runs entirely from a single `.html` file.
-- 📦 Massive Mock Database — Generates 200,000 product records instantly using `Array.from()`.
-- 🔄 Production-Style Cursor Pagination — Uses a composite cursor strategy based on `createdAt` and `_id`.
-- ⏳ Simulated Network Latency — Includes a 400ms delay to mimic real API calls.
-- ⚛️ Modern Frontend Stack — React 18, Babel, and Bootstrap 5 loaded directly from CDNs.
+- Product catalog UI built with React and Bootstrap
+- Category filters for `Electronics`, `Clothing`, `Home`, `Books`, `Beauty`, and `Sports`
+- Cursor-based pagination using `createdAt` and `_id`
+- MongoDB Atlas backend with Mongoose
+- Seed script that creates 200,000 sample products
+- Compound index for fast pagination queries
+- Vercel configuration for deploying frontend and backend together
 
-## 🚀 Getting Started
+## Tech Stack
 
-### 1. Create the HTML File
+### Frontend
 
-Create a file named:
+- React
+- Vite
+- Bootstrap
+- Custom CSS styling
 
-```bash
-index.html
+### Backend
+
+- Node.js
+- Express
+- Mongoose
+- MongoDB Atlas
+- CORS
+
+### Deployment
+
+- Vercel
+
+## Project Structure
+
+```txt
+pagination/
+├── backend/
+│   ├── models/
+│   │   └── Product.js
+│   ├── package.json
+│   ├── seed.js
+│   └── server.js
+├── frontend/
+│   ├── src/
+│   │   ├── components/
+│   │   │   └── ProductCard.jsx
+│   │   ├── api.js
+│   │   ├── App.jsx
+│   │   ├── index.css
+│   │   └── main.jsx
+│   └── package.json
+└── vercel.json
 ```
 
-### 2. Paste the Code
+## How It Works
 
-Copy the provided single-file pagination demo code and paste it into `index.html`.
+The frontend calls:
 
-### 3. Open in Browser
-
-Double-click the file or open it using:
-
-- Chrome
-- Edge
-- Firefox
-- Safari
-
-No installation, package manager, database, or server is required.
-
----
-
-## 🧠 Architecture Overview
-
-This project simulates a complete client-server architecture within a single HTML file.
-
-### Database Layer
-
-```javascript
-MOCK_DB
+```txt
+GET /api/products
 ```
 
-Acts as an in-memory database containing 200,000 generated product records.
+The backend fetches products from MongoDB, sorted by newest first:
 
-### Backend Layer
-
-```javascript
-mockFetchProducts()
+```js
+.sort({ createdAt: -1, _id: -1 })
 ```
 
-Simulates an Express.js API endpoint by:
+When a page is returned, the backend creates a `next_cursor` from the last product's `createdAt` and `_id`. The frontend sends that cursor with the next request:
 
-- Accepting cursor values
-- Decoding cursor information
-- Applying pagination filters
-- Returning paginated data
-- Generating the next cursor
+```txt
+GET /api/products?cursor=<next_cursor>
+```
 
-Example response:
+This lets MongoDB continue from the last item without using slow offset pagination.
+
+## API
+
+### Get Products
+
+```txt
+GET /api/products
+```
+
+Optional query parameters:
+
+| Parameter | Description |
+| --- | --- |
+| `limit` | Number of products to return. Defaults to `20`. |
+| `category` | Filters products by category. |
+| `cursor` | Cursor returned from the previous response. |
+
+Example:
+
+```txt
+GET /api/products?category=Electronics&limit=20
+```
+
+Response:
 
 ```json
 {
-  "products": [...],
-  "next_cursor": "encoded_cursor_value"
+  "data": [
+    {
+      "_id": "mongodb-object-id",
+      "name": "Premium Gadget 1",
+      "category": "Electronics",
+      "price": 149.99,
+      "createdAt": "2026-06-24T10:00:00.000Z",
+      "updatedAt": "2026-06-24T10:00:00.000Z"
+    }
+  ],
+  "next_cursor": "encoded-cursor-value"
 }
 ```
 
-### Frontend Layer
+When there are no more products:
 
-React components manage:
-
-- Product rendering
-- Pagination state
-- Loading states
-- Cursor tracking
-- Infinite navigation
-
-Main components:
-
-```javascript
-App
-ProductCard
-```
-
----
-
-## 🔍 Cursor-Based Pagination Logic
-
-Instead of offset pagination:
-
-```sql
-LIMIT 20 OFFSET 1000
-```
-
-The application uses cursor pagination:
-
-```sql
-WHERE
-(createdAt < cursorCreatedAt)
-OR
-(createdAt = cursorCreatedAt AND _id < cursorId)
-```
-
-### Advantages
-
-- Faster database queries
-- No duplicate records
-- No missing records
-- Consistent results during data updates
-- Better scalability for large datasets
-
----
-
-## 📊 Mock Data Structure
-
-Each product contains:
-
-```javascript
+```json
 {
-  _id: "product_12345",
-  name: "Product 12345",
-  category: "Electronics",
-  price: 999,
-  createdAt: "2026-06-20T10:00:00Z"
+  "data": [],
+  "next_cursor": null
 }
 ```
 
-Records are sorted by:
+## MongoDB Data Model
 
-1. `createdAt DESC`
-2. `_id DESC`
+The `Product` model contains:
 
----
+```js
+{
+  name: String,
+  category: String,
+  price: Number,
+  createdAt: Date,
+  updatedAt: Date
+}
+```
 
-## ⚙️ Customization
+Mongoose maps the `Product` model to the MongoDB collection:
 
-### Change Total Records
+```txt
+products
+```
 
-Locate:
+The expected MongoDB location is:
 
-```javascript
-Array.from({ length: 200000 })
+```txt
+database: inventory
+collection: products
+```
+
+## Database Index
+
+The project uses this compound index:
+
+```js
+{ category: 1, createdAt: -1, _id: -1 }
+```
+
+This index supports both category filtering and cursor pagination.
+
+## Environment Variables
+
+Create an environment variable named:
+
+```txt
+MONGO_URI
 ```
 
 Example:
 
-```javascript
-Array.from({ length: 500000 })
+```txt
+MONGO_URI=mongodb+srv://USERNAME:PASSWORD@cluster0.xxxxx.mongodb.net/inventory?retryWrites=true&w=majority
 ```
 
-### Change Page Size
+Important: include `/inventory` in the URI so the app connects to the correct database.
 
-Locate:
+## Local Setup
 
-```javascript
-limit = 20
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/Gopi-9279/pagination.git
+cd pagination
 ```
 
-Example:
+### 2. Install Backend Dependencies
 
-```javascript
-limit = 50
+```bash
+cd backend
+npm install
 ```
 
-### Change Network Delay
+### 3. Add Backend Environment Variable
 
-Locate:
+Create `backend/.env`:
 
-```javascript
-setTimeout(resolve, 400)
+```txt
+MONGO_URI=mongodb+srv://USERNAME:PASSWORD@cluster0.xxxxx.mongodb.net/inventory?retryWrites=true&w=majority
 ```
 
-Examples:
+### 4. Seed the Database
 
-```javascript
-setTimeout(resolve, 100)
+From the `backend` folder:
+
+```bash
+node seed.js
 ```
 
-Fast connection simulation
+This script:
 
-```javascript
-setTimeout(resolve, 1000)
+- connects to the `inventory` database
+- clears the existing `products` collection
+- creates the pagination index
+- inserts 200,000 sample products
+
+### 5. Install Frontend Dependencies
+
+Open a new terminal:
+
+```bash
+cd frontend
+npm install
 ```
 
-Slow connection simulation
+### 6. Run the Frontend
 
----
-
-## 🎯 Learning Objectives
-
-This project demonstrates:
-
-- Cursor-Based Pagination
-- Infinite Scrolling Concepts
-- Composite Cursor Generation
-- Frontend State Management
-- API Simulation
-- Large Dataset Handling
-- Performance Optimization
-- Production-Ready Pagination Patterns
-
----
-
-## 📈 Why Cursor Pagination?
-
-Offset pagination:
-
-```sql
-LIMIT 20 OFFSET 100000
+```bash
+npm run dev
 ```
 
-requires the database to scan and skip thousands of records before returning results.
+The frontend runs on:
 
-Cursor pagination:
-
-```sql
-WHERE createdAt < cursorTimestamp
+```txt
+http://localhost:5173
 ```
 
-starts directly from the last fetched record, making it significantly faster and more scalable.
+## Vercel Deployment
 
----
+The project includes a `vercel.json` file that deploys:
 
-## 🏗️ Tech Stack
+- `backend/server.js` as a Vercel Node function
+- `frontend` as a static Vite build
 
-| Technology | Purpose |
-|------------|----------|
-| HTML5 | Structure |
-| React 18 | UI Rendering |
-| ReactDOM | DOM Manipulation |
-| Babel | JSX Compilation |
-| Bootstrap 5 | Styling |
-| JavaScript ES6+ | Application Logic |
+API requests are routed through:
 
----
+```txt
+/api/*
+```
 
-## 📜 License
+Example production endpoint:
 
-This project is intended for educational purposes and demonstrates high-performance cursor-based pagination techniques commonly used in production applications.
+```txt
+https://your-vercel-app.vercel.app/api/products
+```
+
+### Required Vercel Environment Variable
+
+In Vercel, add:
+
+```txt
+MONGO_URI=mongodb+srv://USERNAME:PASSWORD@cluster0.xxxxx.mongodb.net/inventory?retryWrites=true&w=majority
+```
+
+After adding or changing environment variables, redeploy the project.
+
+## Troubleshooting
+
+### `/api/products` returns `{"data":[],"next_cursor":null}`
+
+This means the backend route is working, but MongoDB returned zero products.
+
+Check:
+
+- the URI includes `/inventory`
+- the collection name is `products`
+- the `products` collection contains documents
+- the documents have `name`, `category`, `price`, and `createdAt`
+
+### MongoDB connects locally but not on Vercel
+
+Check:
+
+- `MONGO_URI` is added in Vercel
+- the variable name is exactly `MONGO_URI`
+- the Atlas password is URL-encoded if it contains special characters
+- Atlas Network Access allows Vercel connections
+
+For Atlas Network Access during development, you can allow access from anywhere:
+
+```txt
+0.0.0.0/0
+```
+
+### Browser shows CORS errors
+
+The backend currently allows:
+
+```js
+app.use(cors({ origin: 'http://localhost:5173' }));
+```
+
+For production, update it to include your Vercel domain or use:
+
+```js
+app.use(cors());
+```
+
+### Products do not render correctly
+
+Each product should include:
+
+```txt
+name
+category
+price
+createdAt
+```
+
+The frontend displays product category, name, price, and creation date.
+
+## Notes
+
+- The app uses cursor pagination instead of `skip()` for better performance with large datasets.
+- The seed script intentionally staggers timestamps so cursor pagination has stable ordering.
+- The backend sorts by both `createdAt` and `_id` to avoid duplicate or missing results when timestamps match.
+
+## License
+
+This project is open source and available for learning and experimentation.
